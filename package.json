@@ -1,5 +1,5 @@
 {
-  "name": "Headhunter",
+  "name": "headhunter",
   "version": "0.1.0",
   "main": "index.js",
   "description": "Batch query for Full Contact API",
