@@ -1,6 +1,6 @@
 {
   "name": "headhunter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "index.js",
   "description": "Batch query for Full Contact API",
   "author": "@Jastrzebowski",
