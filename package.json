@@ -8,6 +8,10 @@
   "keywords": [
     "Full Contact"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jastrzebowski/headhunter.git"
+  },
   "bin": {
     "headhuner": "./index.js"
   },
