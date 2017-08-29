@@ -13,7 +13,7 @@
     "url": "https://github.com/Jastrzebowski/headhunter.git"
   },
   "bin": {
-    "headhuner": "./index.js"
+    "headhunter": "./index.js"
   },
   "dependencies": {
     "commander": "^2.11.0",
