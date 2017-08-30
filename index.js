@@ -1,32 +1,41 @@
 #!/usr/bin/env node
 
+const jsonexport = require('jsonexport')
 const fs = require('fs')
 const program = require('commander')
 
+function save (results, output = 'output.json') {
+  fs.writeFile(output, results, error => {
+    if (error) {
+      throw error
+    }
+  })
+}
+
 program
   .arguments('<file>')
-  .version('0.1.0')
+  .version('0.2.0')
+  .option('-f, --format <format>', 'Format of the output JSON, or CSV', 'json')
   .option('-k, --apikey <apikey>', 'Your Full Contact API key')
   .option('-l, --lookup <lookup>', 'Use the person method to request more information about a specific person by email, phone or Twitter. Default email.', /^(email|twitter|phone)$/i, 'email')
   .option('-o, --output <output>', 'Output file, default output.json', 'output.json')
   .action(file => {
-
     // Get queries list
-    const queries = fs.readFileSync(file).toString().split('\n');
+    const queries = fs.readFileSync(file, 'utf8').toString().split('\n')
 
     // Set options
-    const { apikey, lookup, output } = { ...program }
-    const results = []
+    const { apikey, format, lookup, output } = { ...program }
+    const contacts = []
 
     console.debug(apikey, lookup, output, queries.length)
 
     // Initiate Full Contact SDk
     const fullcontact = require('fullcontact-node')({
-      apiKey: apikey //for v2 APIs. See: https://www.fullcontact.com/developer/
+      // for v2 APIs. See: https://www.fullcontact.com/developer/
+      apiKey: apikey
     })
 
     queries.forEach(query => {
-      
       console.info(`${lookup}: ${query}`)
 
       // Build and send a Full Contact API call
@@ -34,24 +43,22 @@ program
         [lookup]: query
       })
         .then(response => {
-
           const profiles = {}
 
           // Remap social accounts into a dictionary
-          response.socialProfiles.forEach( profile => {
-              profiles[profile.type] = {
-                url: profile.url,
-                username: profile.username,
-                bio: profile.bio
-              }
+          response.socialProfiles.forEach(profile => {
+            profiles[profile.type] = {
+              url: profile.url,
+              username: profile.username,
+              bio: profile.bio
             }
-          )
+          })
 
-          results.push({
+          contacts.push({
             fullName: response.contactInfo.fullName,
             City: response.demographics.locationDeduced.normalizedLocation,
             Country: response.demographics.locationDeduced.country.name,
-            LIBio: profiles.linkedin ? profiles.linkedin.bio: '',
+            LIBio: profiles.linkedin ? profiles.linkedin.bio : '',
             [lookup]: query,
             TwitterURL: profiles.twitter ? profiles.twitter.url : '',
             LinkedinURL: profiles.linkedin ? profiles.linkedin.url : '',
@@ -61,18 +68,21 @@ program
             YoutubeURL: profiles.youtube ? profiles.youtube.url : ''
           })
 
-          fs.writeFile(output, JSON.stringify(results), function(error) {
-            
-            if (error) {
-              throw error
-            }
-
-          })
+          if (format.toLowerCase() === 'csv') {
+            jsonexport(contacts, (error, csv) => {
+              if (error) {
+                throw error
+              } else {
+                save(csv, output)
+              }
+            })
+          } else {
+            save(JSON.stringify(contacts), output)
+          }
         })
         .catch(response => {
           console.error('error %s', query, response.status, response.message)
         })
     })
-
   })
-  .parse(process.argv);
+  .parse(process.argv)
